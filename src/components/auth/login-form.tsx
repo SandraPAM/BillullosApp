@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { GoogleSignInButton } from './google-signin-button';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -32,26 +35,21 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Placeholder for actual Firebase login
     try {
-      console.log('Logging in with:', values);
-      // await signInWithEmail(values.email, values.password);
+      await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: "Login Successful",
         description: "Redirecting to your dashboard...",
       });
-      // Simulate API call
-      setTimeout(() => {
-        router.push('/dashboard');
-        setIsLoading(false);
-      }, 1000);
+      router.push('/dashboard');
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
         description: 'Invalid email or password. Please try again.',
       });
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   }
 

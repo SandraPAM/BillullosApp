@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,16 +15,31 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserNav() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
-  const handleSignOut = () => {
-    // Placeholder for Firebase sign out
-    console.log('Signing out...');
-    // In a real app: await signOutUser();
-    router.push('/login');
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
+      router.push('/login');
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Sign Out Failed',
+        description: 'Could not sign you out. Please try again.',
+      });
+    }
   };
 
   const getInitials = (name: string | null | undefined) => {

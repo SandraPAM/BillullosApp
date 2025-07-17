@@ -1,6 +1,7 @@
+
 "use client";
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   SidebarContent,
   SidebarHeader,
@@ -19,6 +20,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/logo';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
+import { useToast } from '@/hooks/use-toast';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,11 +33,24 @@ const menuItems = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
 
-  const handleSignOut = () => {
-    // Placeholder for sign out logic
-    console.log("Signing out...");
-    // In a real app: await signOutUser(); router.push('/login');
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
+      router.push('/login');
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Sign Out Failed',
+        description: 'Could not sign you out. Please try again.',
+      });
+    }
   };
 
   return (

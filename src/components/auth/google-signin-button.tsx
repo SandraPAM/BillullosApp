@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -5,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -20,25 +23,21 @@ export function GoogleSignInButton(props: ButtonProps) {
 
   const handleSignIn = async () => {
     setIsLoading(true);
-    // Placeholder for actual Firebase Google sign-in
     try {
-        console.log("Signing in with Google");
-        // await signInWithGoogle();
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
         toast({
             title: "Sign-in Successful",
             description: "Redirecting to your dashboard...",
         });
-        // Simulate API call
-        setTimeout(() => {
-            router.push('/dashboard');
-            setIsLoading(false);
-        }, 1000);
+        router.push('/dashboard');
     } catch (error) {
         toast({
             variant: 'destructive',
             title: 'Sign-in Failed',
             description: 'Could not sign in with Google. Please try again.',
         });
+    } finally {
         setIsLoading(false);
     }
   };
