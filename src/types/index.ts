@@ -1,4 +1,5 @@
 import type { User as FirebaseUser } from "firebase/auth";
+import { Timestamp } from "firebase/firestore";
 
 export interface User extends FirebaseUser {
   // Add any custom user properties here
@@ -9,8 +10,9 @@ export interface Budget {
   name: string;
   amount: number;
   spentAmount: number;
-  deadline: string; // ISO string
+  deadline: Timestamp; // serverTimestamp
   userId: string;
+  createdAt?: Timestamp; // serverTimestamp
 }
 
 export interface Expense {
@@ -18,8 +20,7 @@ export interface Expense {
   budgetId: string;
   description: string;
   amount: number;
-  date: string; // ISO string
-  receiptUrl?: string;
+  date: Timestamp; // Changed to Timestamp
   userId: string;
 }
 
