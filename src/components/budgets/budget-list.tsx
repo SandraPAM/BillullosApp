@@ -11,6 +11,18 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from 'next/link';
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { PlusCircle } from "lucide-react";
+
 
 const mockBudgets = [
     { id: 'mock-1', name: 'Monthly Groceries', amount: 500, spentAmount: 350.75, deadline: new Date('2024-07-31') },
@@ -23,11 +35,10 @@ const BudgetCard = ({ budget, isMock = false }: { budget: any, isMock?: boolean 
     const progress = Math.min((budget.spentAmount / budget.amount) * 100, 100);
     const remaining = budget.amount - budget.spentAmount;
 
-    // Firestore timestamp needs to be converted to Date
     const deadlineDate = budget.deadline?.toDate ? budget.deadline.toDate() : budget.deadline;
 
-    return (
-        <Card className={cn(isMock && "pointer-events-none opacity-70")}>
+    const cardContent = (
+        <>
             <CardHeader>
                 <CardTitle className="font-headline">{budget.name}</CardTitle>
                 <CardDescription>
@@ -48,8 +59,40 @@ const BudgetCard = ({ budget, isMock = false }: { budget: any, isMock?: boolean 
                         : `$${Math.abs(remaining).toFixed(2)} over budget`}
                 </div>
             </CardContent>
+        </>
+    );
+
+    if (isMock) {
+        return (
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Card className="opacity-70 cursor-pointer hover:border-primary/50 transition-colors">
+                        {cardContent}
+                         <CardFooter>
+                             <Button variant="outline" className="w-full" disabled>Manage Budget</Button>
+                         </CardFooter>
+                    </Card>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>This is a Demo Budget</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Mock budgets are for demonstration purposes only and cannot be edited. Please create a new budget to start tracking your finances.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction>Got it!</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        )
+    }
+
+    return (
+        <Card>
+            {cardContent}
             <CardFooter>
-                 <Button asChild variant="outline" className="w-full" disabled={isMock}>
+                 <Button asChild variant="outline" className="w-full">
                     <Link href={`/dashboard/budgets/${budget.id}`}>Manage Budget</Link>
                 </Button>
             </CardFooter>
@@ -71,7 +114,6 @@ export function BudgetList() {
                 setLoading(false);
             });
 
-            // Cleanup subscription on unmount
             return () => unsubscribe();
         } else {
             setLoading(false);
@@ -106,30 +148,33 @@ export function BudgetList() {
     
     const hasRealBudgets = budgets.length > 0;
 
+    if (!hasRealBudgets) {
+        return (
+            <div>
+                 <div className="relative mb-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t"></span>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                           Demo Budgets
+                        </span>
+                    </div>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {mockBudgets.map((budget) => (
+                        <BudgetCard key={budget.id} budget={budget} isMock={true} />
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {budgets.map((budget) => (
                 <BudgetCard key={budget.id} budget={budget} />
             ))}
-            {/* If there are real budgets, we add a separator. If not, the heading is enough. */}
-            {hasRealBudgets && (
-                <div className="lg:col-span-3 md:col-span-2">
-                    <div className="relative my-4">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t"></span>
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">
-                                Mock Examples
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            )}
-             {mockBudgets.map((budget) => (
-                <BudgetCard key={budget.id} budget={budget} isMock={true} />
-            ))}
         </div>
     );
 }
-
