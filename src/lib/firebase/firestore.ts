@@ -1,4 +1,4 @@
-import { collection, addDoc, serverTimestamp, Timestamp, query, where, onSnapshot, doc, getDoc, updateDoc, increment } from "firebase/firestore"; 
+import { collection, addDoc, serverTimestamp, Timestamp, query, where, onSnapshot, doc, getDoc, updateDoc, increment, deleteDoc, writeBatch, getDocs } from "firebase/firestore"; 
 import { db } from "./config";
 import type { Budget, Expense } from "@/types";
 
@@ -144,4 +144,39 @@ export function onExpensesUpdate(budgetId: string, callback: (expenses: Expense[
     });
 
     return unsubscribe;
+}
+
+/**
+ * Deletes a budget and all its associated expenses.
+ * @param budgetId The ID of the budget to delete.
+ */
+export async function deleteBudget(budgetId: string) {
+  if (!db) {
+    throw new Error("Firestore is not initialized.");
+  }
+
+  const budgetRef = doc(db, "budgets", budgetId);
+  const expensesQuery = query(collection(db, "expenses"), where("budgetId", "==", budgetId));
+
+  try {
+    // Start a batch write
+    const batch = writeBatch(db);
+
+    // Get all expenses for the budget
+    const expensesSnapshot = await getDocs(expensesQuery);
+    expensesSnapshot.forEach((doc) => {
+      batch.delete(doc.ref); // Add each expense deletion to the batch
+    });
+
+    // Add the budget deletion to the batch
+    batch.delete(budgetRef);
+
+    // Commit the batch
+    await batch.commit();
+    console.log(`Budget ${budgetId} and all its expenses have been deleted.`);
+
+  } catch (e) {
+    console.error("Error deleting budget and expenses: ", e);
+    throw new Error("Failed to delete budget.");
+  }
 }

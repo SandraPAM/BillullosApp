@@ -5,23 +5,27 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { onBudgetUpdate, onExpensesUpdate } from '@/lib/firebase/firestore';
 import type { Budget, Expense } from '@/types';
-import { notFound } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 
-import { ArrowLeft, Wallet } from 'lucide-react';
+import { ArrowLeft, Wallet, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { BudgetDetailCard } from '@/components/budgets/budget-detail-card';
 import { AddExpenseForm } from '@/components/budgets/add-expense-form';
 import { ExpenseList } from '@/components/budgets/expense-list';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DeleteBudgetButton } from '@/components/budgets/delete-budget-button';
 
-export default function BudgetDetailPage({ params }: { params: { id: string } }) {
+export default function BudgetDetailPage() {
   const { user } = useAuth();
-  const budgetId = params.id;
+  const params = useParams();
+  const router = useRouter();
+  const budgetId = params.id as string;
 
   const [budget, setBudget] = useState<Budget | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (user && budgetId) {
@@ -48,6 +52,25 @@ export default function BudgetDetailPage({ params }: { params: { id: string } })
     }
   }, [user, budgetId]);
 
+  const handleBudgetDeleted = () => {
+    router.push('/dashboard/budgets');
+  }
+
+  const handleDeleting = () => {
+    setDeleting(true);
+  }
+  
+  if (deleting) {
+    return (
+      <div className="flex h-full min-h-[calc(100vh-10rem)] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-lg text-muted-foreground">Deleting budget...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return <BudgetDetailPageSkeleton />;
   }
@@ -73,7 +96,10 @@ export default function BudgetDetailPage({ params }: { params: { id: string } })
                 </div>
                 <p className="text-muted-foreground">Detailed view of your budget.</p>
             </div>
-            <AddExpenseForm budgetId={budget.id} userId={user!.uid} />
+            <div className="flex items-center gap-2">
+              <AddExpenseForm budgetId={budget.id} userId={user!.uid} />
+              <DeleteBudgetButton budgetId={budget.id} onBudgetDeleted={handleBudgetDeleted} onDeleting={handleDeleting} />
+            </div>
         </div>
       </div>
       

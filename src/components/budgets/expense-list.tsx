@@ -21,8 +21,10 @@ import { format } from "date-fns";
 import { ListCollapse } from "lucide-react";
 
 export function ExpenseList({ expenses }: { expenses: Expense[] }) {
-  // Sort expenses by date, most recent first
-  const sortedExpenses = expenses.sort((a, b) => b.date.toDate().getTime() - a.date.toDate().getTime());
+  // Filter out expenses without a date and sort them, most recent first
+  const sortedExpenses = expenses
+    .filter(expense => expense.date)
+    .sort((a, b) => b.date.toDate().getTime() - a.date.toDate().getTime());
 
   return (
     <Card>
@@ -50,7 +52,9 @@ export function ExpenseList({ expenses }: { expenses: Expense[] }) {
                 <TableRow key={expense.id}>
                   <TableCell className="font-medium">{expense.description}</TableCell>
                   <TableCell className="text-right font-mono text-destructive">-${expense.amount.toFixed(2)}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{format(expense.date.toDate(), "MMM d, yyyy")}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">
+                    {expense.date ? format(expense.date.toDate(), "MMM d, yyyy") : "Processing..."}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
