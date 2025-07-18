@@ -180,3 +180,73 @@ export async function deleteBudget(budgetId: string) {
     throw new Error("Failed to delete budget.");
   }
 }
+
+
+type UpdateExpenseData = Omit<Expense, 'id' | 'date' | 'budgetId' | 'userId'>;
+
+/**
+ * Updates an existing expense and adjusts the parent budget's spent amount.
+ * @param expenseId The ID of the expense to update.
+ * @param budgetId The ID of the parent budget.
+ * @param oldAmount The original amount of the expense before updating.
+ * @param newExpenseData The new data for the expense.
+ */
+export async function updateExpense(expenseId: string, budgetId: string, oldAmount: number, newExpenseData: UpdateExpenseData) {
+  if (!db) {
+    throw new Error("Firestore is not initialized.");
+  }
+
+  const expenseRef = doc(db, "expenses", expenseId);
+  const budgetRef = doc(db, "budgets", budgetId);
+
+  try {
+    const amountDifference = newExpenseData.amount - oldAmount;
+
+    const batch = writeBatch(db);
+    
+    // Update the expense document
+    batch.update(expenseRef, newExpenseData);
+
+    // Adjust the budget's spent amount
+    batch.update(budgetRef, {
+        spentAmount: increment(amountDifference)
+    });
+
+    await batch.commit();
+  } catch (e) {
+    console.error("Error updating expense:", e);
+    throw new Error("Failed to update expense.");
+  }
+}
+
+/**
+ * Deletes a single expense and decrements the budget's spent amount.
+ * @param expenseId The ID of the expense to delete.
+ * @param budgetId The ID of the parent budget.
+ * @param amount The amount of the expense being deleted.
+ */
+export async function deleteExpense(expenseId: string, budgetId: string, amount: number) {
+  if (!db) {
+    throw new Error("Firestore is not initialized.");
+  }
+  
+  const expenseRef = doc(db, "expenses", expenseId);
+  const budgetRef = doc(db, "budgets", budgetId);
+
+  try {
+    const batch = writeBatch(db);
+
+    // Delete the expense document
+    batch.delete(expenseRef);
+
+    // Decrement the spentAmount on the budget
+    batch.update(budgetRef, {
+        spentAmount: increment(-amount)
+    });
+
+    await batch.commit();
+  } catch (e) {
+    console.error("Error deleting expense:", e);
+    throw new Error("Failed to delete expense.");
+  }
+}
