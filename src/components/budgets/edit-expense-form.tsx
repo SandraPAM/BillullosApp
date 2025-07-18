@@ -7,7 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { updateExpense } from "@/lib/firebase/firestore";
+import { uploadReceipt, deleteFileFromStorage } from "@/lib/firebase/storage";
 import type { Expense } from "@/types";
+import Image from "next/image";
+import { v4 as uuidv4 } from 'uuid';
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +27,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,9 +36,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, Pencil } from "lucide-react";
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+
 const formSchema = z.object({
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
   amount: z.coerce.number().positive({ message: "Amount must be a positive number." }),
+  receipt: z
+    .custom<FileList>()
+    .refine((files) => files === undefined || files.length === 0 || files?.[0]?.size <= MAX_FILE_SIZE, `Max image size is 2MB.`)
+    .refine(
+      (files) => files === undefined || files.length === 0 || ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      "Only .jpg, .jpeg, and .png formats are supported."
+    ).optional(),
 });
 
 interface EditExpenseFormProps {
@@ -53,10 +68,30 @@ export function EditExpenseForm({ expense }: EditExpenseFormProps) {
     },
   });
 
+  const fileRef = form.register("receipt");
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await updateExpense(expense.id, expense.budgetId, expense.amount, values);
+      const receiptFile = values.receipt?.[0];
+      const updatedData: Partial<Expense> = {
+        description: values.description,
+        amount: values.amount,
+      };
+
+      if (receiptFile) {
+        // Delete the old receipt if it exists
+        if (expense.storagePath) {
+          await deleteFileFromStorage(expense.storagePath);
+        }
+        // Upload the new one
+        const { downloadURL, storagePath } = await uploadReceipt(receiptFile, expense.userId, expense.id);
+        updatedData.receiptUrl = downloadURL;
+        updatedData.storagePath = storagePath;
+      }
+      
+      await updateExpense(expense.id, expense.budgetId, expense.amount, updatedData);
+      
       toast({
         title: "Expense Updated",
         description: "Your expense has been successfully updated.",
@@ -111,8 +146,32 @@ export function EditExpenseForm({ expense }: EditExpenseFormProps) {
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 75.50" {...field} disabled={isLoading} />
+                    <Input type="number" step="0.01" placeholder="e.g., 75.50" {...field} disabled={isLoading} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {expense.receiptUrl && (
+                <div className="space-y-2">
+                    <Label>Current Receipt</Label>
+                    <div className="relative h-24 w-24 rounded-md overflow-hidden">
+                        <Image src={expense.receiptUrl} alt="Receipt" layout="fill" objectFit="cover" />
+                    </div>
+                </div>
+            )}
+            <FormField
+              control={form.control}
+              name="receipt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{expense.receiptUrl ? 'Upload New Receipt' : 'Receipt (Optional)'}</FormLabel>
+                  <FormControl>
+                    <Input type="file" accept="image/png, image/jpeg" {...fileRef} disabled={isLoading} />
+                  </FormControl>
+                   <FormDescription>
+                    {expense.receiptUrl ? 'Uploading a new file will replace the current one.' : 'Attach an image of your receipt (.png, .jpg, max 2MB).'}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

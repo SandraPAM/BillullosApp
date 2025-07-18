@@ -32,10 +32,10 @@ export function DeleteExpenseButton({ expense }: DeleteExpenseButtonProps) {
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      await deleteExpense(expense.id, expense.budgetId, expense.amount);
+      await deleteExpense(expense.id, expense.budgetId, expense.amount, expense.storagePath);
       toast({
         title: 'Expense Deleted',
-        description: 'The expense has been successfully deleted.',
+        description: 'The expense and its receipt have been successfully deleted.',
       });
       setOpen(false);
     } catch (error) {
@@ -65,7 +65,7 @@ export function DeleteExpenseButton({ expense }: DeleteExpenseButtonProps) {
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete this expense record.
+            This action cannot be undone. This will permanently delete this expense record and its receipt.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

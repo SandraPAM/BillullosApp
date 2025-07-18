@@ -22,6 +22,8 @@ export interface Expense {
   amount: number;
   date: Timestamp; // Changed to Timestamp
   userId: string;
+  receiptUrl?: string;
+  storagePath?: string;
 }
 
 export interface SavingsGoal {
