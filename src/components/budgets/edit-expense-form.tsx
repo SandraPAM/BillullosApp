@@ -10,7 +10,6 @@ import { updateExpense } from "@/lib/firebase/firestore";
 import { uploadReceipt, deleteFileFromStorage } from "@/lib/firebase/storage";
 import type { Expense } from "@/types";
 import Image from "next/image";
-import { v4 as uuidv4 } from 'uuid';
 
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Loader2, Pencil } from "lucide-react";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -95,6 +95,10 @@ export function EditExpenseForm({ expense }: EditExpenseFormProps) {
       toast({
         title: "Expense Updated",
         description: "Your expense has been successfully updated.",
+      });
+      form.reset({
+        description: values.description,
+        amount: values.amount,
       });
       setOpen(false);
     } catch (error) {

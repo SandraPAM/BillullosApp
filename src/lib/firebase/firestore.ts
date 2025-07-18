@@ -1,3 +1,4 @@
+
 import { collection, addDoc, serverTimestamp, Timestamp, query, where, onSnapshot, doc, getDoc, updateDoc, increment, deleteDoc, writeBatch, getDocs } from "firebase/firestore"; 
 import { db } from "./config";
 import type { Budget, Expense } from "@/types";
@@ -90,7 +91,8 @@ export function onBudgetUpdate(budgetId: string, callback: (budget: Budget | nul
 type AddExpenseData = Omit<Expense, 'id' | 'date' | 'budgetId'>;
 
 /**
- * Adds a new expense and updates the corresponding budget's spent amount.
+ * Adds a new expense document. Does NOT update the budget total.
+ * This is used as the first step in a multi-step process.
  * @param budgetId The ID of the budget this expense belongs to.
  * @param expenseData The data for the new expense.
  * @returns The ID of the newly created expense document.
@@ -100,7 +102,6 @@ export async function addExpense(budgetId: string, expenseData: AddExpenseData):
     throw new Error("Firestore is not initialized.");
   }
   
-  const budgetRef = doc(db, "budgets", budgetId);
   const expenseCollRef = collection(db, "expenses");
 
   try {
@@ -109,33 +110,32 @@ export async function addExpense(budgetId: string, expenseData: AddExpenseData):
       budgetId: budgetId,
       date: serverTimestamp(),
     });
-
-    // Atomically increment the spentAmount on the budget
-    await updateDoc(budgetRef, {
-      spentAmount: increment(expenseData.amount)
-    });
-
     return expenseDocRef.id;
-
   } catch (e) {
-    console.error("Error adding expense: ", e);
-    throw new Error("Failed to add expense.");
+    console.error("Error adding expense document: ", e);
+    throw new Error("Failed to create expense document.");
   }
 }
 
 /**
  * Listens for real-time updates to expenses for a specific budget.
+ * This query requires a composite index on (userId, budgetId).
  * @param budgetId The ID of the budget whose expenses to fetch.
+ * @param userId The ID of the currently authenticated user.
  * @param callback A function to call with the updated expenses list.
  * @returns An unsubscribe function to stop listening for updates.
  */
-export function onExpensesUpdate(budgetId: string, callback: (expenses: Expense[]) => void) {
+export function onExpensesUpdate(budgetId: string, userId: string, callback: (expenses: Expense[]) => void) {
     if (!db) {
         console.error("Firestore is not initialized.");
         return () => {};
     }
 
-    const q = query(collection(db, "expenses"), where("budgetId", "==", budgetId));
+    const q = query(
+      collection(db, "expenses"),
+      where("userId", "==", userId),
+      where("budgetId", "==", budgetId)
+    );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const expenses: Expense[] = [];
@@ -202,7 +202,7 @@ type UpdateExpenseData = Partial<Omit<Expense, 'id' | 'date' | 'budgetId' | 'use
  * Updates an existing expense and adjusts the parent budget's spent amount.
  * @param expenseId The ID of the expense to update.
  * @param budgetId The ID of the parent budget.
- * @param oldAmount The original amount of the expense before updating.
+ * @param oldAmount The original amount of the expense before updating. For new expenses, this should be 0.
  * @param newExpenseData The new data for the expense.
  */
 export async function updateExpense(expenseId: string, budgetId: string, oldAmount: number, newExpenseData: UpdateExpenseData) {
@@ -214,14 +214,31 @@ export async function updateExpense(expenseId: string, budgetId: string, oldAmou
   const budgetRef = doc(db, "budgets", budgetId);
 
   try {
+    // Build the final update object, ensuring no undefined fields are included.
+    const finalUpdateData: { [key: string]: any } = {};
+    if (newExpenseData.description !== undefined) {
+      finalUpdateData.description = newExpenseData.description;
+    }
+    if (newExpenseData.amount !== undefined) {
+      finalUpdateData.amount = newExpenseData.amount;
+    }
+    if (newExpenseData.receiptUrl !== undefined) {
+      finalUpdateData.receiptUrl = newExpenseData.receiptUrl;
+    }
+    if (newExpenseData.storagePath !== undefined) {
+      finalUpdateData.storagePath = newExpenseData.storagePath;
+    }
+
     const amountDifference = (newExpenseData.amount ?? oldAmount) - oldAmount;
 
     const batch = writeBatch(db);
     
-    // Update the expense document
-    batch.update(expenseRef, newExpenseData);
+    // Update the expense document with only defined fields.
+    if (Object.keys(finalUpdateData).length > 0) {
+      batch.update(expenseRef, finalUpdateData);
+    }
 
-    // Adjust the budget's spent amount if the amount changed
+    // Adjust the budget's spent amount if it has changed.
     if (amountDifference !== 0) {
       batch.update(budgetRef, {
         spentAmount: increment(amountDifference)

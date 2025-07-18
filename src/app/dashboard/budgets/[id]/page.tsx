@@ -41,7 +41,7 @@ export default function BudgetDetailPage() {
         setLoading(false);
       });
 
-      const expensesUnsubscribe = onExpensesUpdate(budgetId, (updatedExpenses) => {
+      const expensesUnsubscribe = onExpensesUpdate(budgetId, user.uid, (updatedExpenses) => {
         setExpenses(updatedExpenses);
       });
 

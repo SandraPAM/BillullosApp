@@ -8,7 +8,6 @@ import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { addExpense, updateExpense } from "@/lib/firebase/firestore";
 import { uploadReceipt } from "@/lib/firebase/storage";
-import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +29,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Upload } from "lucide-react";
+import { Loader2, PlusCircle } from "lucide-react";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
@@ -73,6 +72,7 @@ export function AddExpenseForm({ budgetId, userId }: AddExpenseFormProps) {
     try {
       const receiptFile = values.receipt?.[0];
       
+      // Step 1: Create a basic expense document to get an ID
       const expenseData = {
         description: values.description,
         amount: values.amount,
@@ -80,17 +80,24 @@ export function AddExpenseForm({ budgetId, userId }: AddExpenseFormProps) {
         receiptUrl: '',
         storagePath: '',
       };
-
+      
       const expenseId = await addExpense(budgetId, expenseData);
       
+      let uploadData: { receiptUrl?: string; storagePath?: string } = {};
+
+      // Step 2: If there's a file, upload it and get the URL
       if (receiptFile) {
         const { downloadURL, storagePath } = await uploadReceipt(receiptFile, userId, expenseId);
-        await updateExpense(expenseId, budgetId, values.amount, { 
-          receiptUrl: downloadURL, 
-          storagePath: storagePath,
-          amount: values.amount // Pass amount again to avoid decrementing budget
-        });
+        uploadData.receiptUrl = downloadURL;
+        uploadData.storagePath = storagePath;
       }
+      
+      // Step 3: Update the expense with image URL (if any) and increment budget
+      // We pass 0 as oldAmount because we haven't incremented the budget yet.
+      await updateExpense(expenseId, budgetId, 0, {
+        amount: values.amount,
+        ...uploadData,
+      });
 
       toast({
         title: "Expense Added",
