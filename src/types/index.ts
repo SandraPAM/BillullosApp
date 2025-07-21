@@ -39,8 +39,10 @@ export interface SavingsGoal {
 export interface SavingsRecord {
   id: string;
   goalId: string;
+  description: string;
   amount: number;
-  date: string; // ISO string
+  date: Timestamp; // Changed to Timestamp
   screenshotUrl?: string;
+  storagePath?: string;
   userId: string;
 }

@@ -30,6 +30,33 @@ export async function uploadReceipt(file: File, userId: string, expenseId: strin
 }
 
 /**
+ * Uploads a savings screenshot to Firebase Storage.
+ * @param file The image file to upload.
+ * @param userId The ID of the user uploading the file.
+ * @param savingsRecordId The ID of the savings record this screenshot is associated with.
+ * @returns A promise that resolves with the download URL and the storage path of the uploaded file.
+ */
+export async function uploadScreenshot(file: File, userId: string, savingsRecordId: string): Promise<{ downloadURL: string, storagePath: string }> {
+  if (!storage) {
+    throw new Error("Firebase Storage is not initialized.");
+  }
+  
+  const fileExtension = file.name.split('.').pop();
+  const fileName = `${uuidv4()}.${fileExtension}`;
+  const storagePath = `savings-screenshots/${userId}/${savingsRecordId}/${fileName}`;
+  const storageRef = ref(storage, storagePath);
+
+  try {
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return { downloadURL, storagePath };
+  } catch (error) {
+    console.error("Error uploading screenshot:", error);
+    throw new Error("Failed to upload screenshot image.");
+  }
+}
+
+/**
  * Deletes a file from Firebase Storage.
  * @param path The full path to the file in Firebase Storage.
  */
