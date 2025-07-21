@@ -16,7 +16,7 @@ export interface Budget {
 }
 
 export interface Expense {
-  id: string;
+  id:string;
   budgetId: string;
   description: string;
   amount: number;
@@ -31,15 +31,18 @@ export interface SavingsGoal {
   name: string;
   targetAmount: number;
   currentAmount: number;
-  deadline: string; // ISO string
+  deadline: Timestamp; // Changed to Timestamp
   userId: string;
+  createdAt?: Timestamp; // serverTimestamp
 }
 
 export interface SavingsRecord {
   id: string;
   goalId: string;
+  description: string;
   amount: number;
-  date: string; // ISO string
+  date: Timestamp; // Changed to Timestamp
   screenshotUrl?: string;
+  storagePath?: string;
   userId: string;
 }
