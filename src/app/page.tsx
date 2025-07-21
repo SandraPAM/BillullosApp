@@ -62,7 +62,7 @@ export default function Home() {
 
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <Image 
-            src="https://placehold.co/1200x600.png"
+            src="/images/Gemini_Generated_Image_u3od5xu3od5xu3od.png"
             alt="Billullos app dashboard"
             width={1200}
             height={600}
