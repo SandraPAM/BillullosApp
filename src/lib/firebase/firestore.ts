@@ -362,14 +362,19 @@ export function onGoalUpdate(goalId: string, callback: (goal: SavingsGoal | null
 /**
  * Deletes a savings goal and all its associated records and screenshots.
  * @param goalId The ID of the savings goal to delete.
+ * @param userId The ID of the user who owns the goal.
  */
-export async function deleteSavingsGoal(goalId: string) {
+export async function deleteSavingsGoal(goalId: string, userId: string) {
   if (!db) {
     throw new Error("Firestore is not initialized.");
   }
 
   const goalRef = doc(db, "savingsGoals", goalId);
-  const recordsQuery = query(collection(db, "savingsRecords"), where("goalId", "==", goalId));
+  const recordsQuery = query(
+    collection(db, "savingsRecords"), 
+    where("goalId", "==", goalId),
+    where("userId", "==", userId)
+  );
 
   try {
     const batch = writeBatch(db);

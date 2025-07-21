@@ -28,7 +28,7 @@ export default function GoalDetailPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (user && goalId) {
+    if (user && goalId && !deleting) {
       setLoading(true);
       const goalUnsubscribe = onGoalUpdate(goalId, (updatedGoal) => {
         if (updatedGoal && updatedGoal.userId !== user.uid) {
@@ -49,7 +49,7 @@ export default function GoalDetailPage() {
         recordsUnsubscribe();
       };
     }
-  }, [user, goalId]);
+  }, [user, goalId, deleting]);
 
   const handleGoalDeleted = () => {
     router.push('/dashboard/savings-goals');
@@ -97,7 +97,7 @@ export default function GoalDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <AddIncomeForm goalId={goal.id} userId={user!.uid} />
-              <DeleteGoalButton goalId={goal.id} onGoalDeleted={handleGoalDeleted} onDeleting={handleDeleting} />
+              <DeleteGoalButton goalId={goal.id} userId={user!.uid} onGoalDeleted={handleGoalDeleted} onDeleting={handleDeleting} />
             </div>
         </div>
       </div>

@@ -21,11 +21,12 @@ import { Loader2, Trash2 } from 'lucide-react';
 
 interface DeleteGoalButtonProps {
   goalId: string;
+  userId: string;
   onGoalDeleted: () => void;
   onDeleting: () => void;
 }
 
-export function DeleteGoalButton({ goalId, onGoalDeleted, onDeleting }: DeleteGoalButtonProps) {
+export function DeleteGoalButton({ goalId, userId, onGoalDeleted, onDeleting }: DeleteGoalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -33,7 +34,7 @@ export function DeleteGoalButton({ goalId, onGoalDeleted, onDeleting }: DeleteGo
     setIsLoading(true);
     onDeleting();
     try {
-      await deleteSavingsGoal(goalId);
+      await deleteSavingsGoal(goalId, userId);
       toast({
         title: 'Savings Goal Deleted',
         description: 'The goal and all its records have been successfully deleted.',
@@ -46,6 +47,8 @@ export function DeleteGoalButton({ goalId, onGoalDeleted, onDeleting }: DeleteGo
         title: 'Error',
         description: 'Could not delete the savings goal. Please try again.',
       });
+       // If deletion fails, we should allow the user to try again.
+      setIsLoading(false);
     }
   };
 
