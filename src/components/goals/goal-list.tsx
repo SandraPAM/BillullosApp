@@ -54,10 +54,14 @@ const GoalCard = ({ goal, isMock = false }: { goal: any, isMock?: boolean }) => 
                         : `Goal reached!`}
                 </div>
             </CardContent>
-             <CardFooter>
-                 <Button asChild variant="outline" className="w-full" disabled={isMock}>
-                    <Link href={`/dashboard/savings-goals/${goal.id}`}>Manage Goal</Link>
-                </Button>
+            <CardFooter>
+                {isMock ? (
+                    <Button variant="outline" className="w-full" disabled>Manage Goal</Button>
+                ) : (
+                    <Button asChild variant="outline" className="w-full">
+                        <Link href={`/dashboard/savings-goals/${goal.id}`}>Manage Goal</Link>
+                    </Button>
+                )}
             </CardFooter>
         </>
     );
@@ -82,7 +86,7 @@ const GoalCard = ({ goal, isMock = false }: { goal: any, isMock?: boolean }) => 
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        )
+        );
     }
 
     return <Card>{cardContent}</Card>;
