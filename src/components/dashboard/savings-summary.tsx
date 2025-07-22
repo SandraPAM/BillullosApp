@@ -1,5 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { onGoalsUpdate } from "@/lib/firebase/firestore";
+import type { SavingsGoal } from "@/types";
 import {
   Card,
   CardContent,
@@ -13,17 +17,9 @@ import {
   ChartTooltipContent,
   ChartConfig,
 } from "@/components/ui/chart"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Target } from "lucide-react";
-
-const chartData = [
-  { month: "January", saved: 200, goal: 500 },
-  { month: "February", saved: 450, goal: 500 },
-  { month: "March", saved: 500, goal: 500 },
-  { month: "April", saved: 800, goal: 1000 },
-  { month: "May", saved: 950, goal: 1000 },
-  { month: "June", saved: 1200, goal: 1000 },
-]
+import { Skeleton } from "@/components/ui/skeleton";
 
 const chartConfig = {
   goal: {
@@ -37,6 +33,46 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function SavingsSummary() {
+  const { user } = useAuth();
+  const [goals, setGoals] = useState<SavingsGoal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      const unsubscribe = onGoalsUpdate(user.uid, (updatedGoals) => {
+        setGoals(updatedGoals);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const chartData = goals.map(goal => ({
+    name: goal.name.slice(0, 10) + (goal.name.length > 10 ? '...' : ''), // Truncate name for chart
+    goal: goal.targetAmount,
+    saved: goal.currentAmount,
+  })).slice(0, 6); // Display up to 6 goals
+
+  if (loading) {
+    return (
+       <Card>
+        <CardHeader>
+           <div className="flex items-center gap-2">
+            <Target className="h-6 w-6 text-primary" />
+            <Skeleton className="h-6 w-48" />
+          </div>
+          <Skeleton className="h-4 w-full max-w-sm" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[250px] w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -44,25 +80,23 @@ export function SavingsSummary() {
           <Target className="h-6 w-6 text-primary" />
           <CardTitle className="font-headline">Savings Goals Progress</CardTitle>
         </div>
-        <CardDescription>Your progress towards your savings goals.</CardDescription>
+        <CardDescription>
+          {chartData.length > 0 
+            ? "Your progress towards your savings goals."
+            : "No savings goals found. Add one to see your progress."
+          }
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[250px] w-full">
-            <AreaChart
-                accessibilityLayer
-                data={chartData}
-                margin={{
-                    left: 12,
-                    right: 12,
-                }}
-            >
+        {chartData.length > 0 ? (
+          <ChartContainer config={chartConfig} className="h-[250px] w-full">
+            <BarChart accessibilityLayer data={chartData} margin={{ top: 20 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis
-                    dataKey="month"
+                    dataKey="name"
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
                 />
                 <YAxis
                   tickLine={false}
@@ -74,24 +108,15 @@ export function SavingsSummary() {
                     cursor={false}
                     content={<ChartTooltipContent indicator="dot" />}
                 />
-                <Area
-                    dataKey="goal"
-                    type="natural"
-                    fill="var(--color-goal)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-goal)"
-                    stackId="a"
-                />
-                <Area
-                    dataKey="saved"
-                    type="natural"
-                    fill="var(--color-saved)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-saved)"
-                    stackId="a"
-                />
-            </AreaChart>
-        </ChartContainer>
+                <Bar dataKey="goal" fill="var(--color-goal)" radius={4} />
+                <Bar dataKey="saved" fill="var(--color-saved)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        ) : (
+          <div className="flex h-[250px] items-center justify-center text-center text-muted-foreground">
+            <p>Your savings progress will appear here.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
