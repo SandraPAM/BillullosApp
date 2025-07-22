@@ -55,8 +55,8 @@ export default function GoalDetailPage() {
     router.push('/dashboard/savings-goals');
   }
 
-  const handleDeleting = () => {
-    setDeleting(true);
+  const handleDeleting = (isDeleting: boolean) => {
+    setDeleting(isDeleting);
   }
   
   if (deleting) {
@@ -97,7 +97,12 @@ export default function GoalDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <AddIncomeForm goalId={goal.id} userId={user!.uid} />
-              <DeleteGoalButton goalId={goal.id} userId={user!.uid} onGoalDeleted={handleGoalDeleted} onDeleting={handleDeleting} />
+              <DeleteGoalButton 
+                goalId={goal.id} 
+                userId={user!.uid} 
+                onGoalDeleted={handleGoalDeleted} 
+                onDeletingChange={handleDeleting} 
+              />
             </div>
         </div>
       </div>

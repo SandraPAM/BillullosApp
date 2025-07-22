@@ -1,32 +1,36 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read and write their own 'budgets' documents.
-    match /budgets/{budgetId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
 
-      // Allow create only if the user is creating a budget for themselves
-      // and provides all the required, correctly-formatted fields.
-      allow create: if request.auth != null &&
-                      request.auth.uid == request.resource.data.userId &&
-                      request.resource.data.name is string &&
-                      request.resource.data.name.size() > 0 &&
-                      request.resource.data.amount is number &&
-                      request.resource.data.amount > 0 &&
-                      request.resource.data.deadline is timestamp && // Correctly check for timestamp
-                      request.resource.data.spentAmount == 0 &&
-                      request.resource.data.createdAt == request.time;
-
-      // Allow users to update their own budgets.
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-      
-      // Allow users to delete their own budgets.
-      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    // Helper function to check ownership
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // Default deny all other reads and writes
-    match /{document=**} {
-      allow read, write: if false;
+    // Budgets: Users can CUD their own budgets, and Read them.
+    match /budgets/{budgetId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+    
+    // Expenses: Users can manage expenses for budgets they own.
+    match /expenses/{expenseId} {
+      allow create: if isOwner(request.resource.data.userId);
+      allow read, update, delete: if isOwner(resource.data.userId);
+      
+      // This is the key rule: Allow listing expenses if the query is for a budget owned by the user.
+      allow list: if request.auth != null && get(/databases/$(database)/documents/budgets/$(request.query.get("where")[0][2])).data.userId == request.auth.uid;
+    }
+
+    // Savings Goals: Users can CUD their own goals, and Read them.
+    match /savingsGoals/{goalId} {
+      allow read, create, update, delete: if isOwner(resource.data.userId);
+    }
+
+    // Savings Records: Users can manage records for goals they own.
+    match /savingsRecords/{recordId} {
+      allow create: if isOwner(request.resource.data.userId);
+      allow read, update, delete: if isOwner(resource.data.userId);
     }
   }
 }
