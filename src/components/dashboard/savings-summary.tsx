@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -32,6 +33,13 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+const mockChartData = [
+  { name: 'Vacation', goal: 3000, saved: 1200 },
+  { name: 'New Laptop', goal: 1500, saved: 800 },
+  { name: 'Emergency', goal: 5000, saved: 4500 },
+  { name: 'Car Fund', goal: 10000, saved: 2500 },
+];
+
 export function SavingsSummary() {
   const { user } = useAuth();
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
@@ -50,11 +58,15 @@ export function SavingsSummary() {
     }
   }, [user]);
 
-  const chartData = goals.map(goal => ({
-    name: goal.name.slice(0, 10) + (goal.name.length > 10 ? '...' : ''), // Truncate name for chart
-    goal: goal.targetAmount,
-    saved: goal.currentAmount,
-  })).slice(0, 6); // Display up to 6 goals
+  const hasRealGoals = goals.length > 0;
+
+  const chartData = hasRealGoals
+    ? goals.map(goal => ({
+        name: goal.name.slice(0, 10) + (goal.name.length > 10 ? '...' : ''), // Truncate name for chart
+        goal: goal.targetAmount,
+        saved: goal.currentAmount,
+      })).slice(0, 6)
+    : mockChartData;
 
   if (loading) {
     return (
@@ -81,9 +93,9 @@ export function SavingsSummary() {
           <CardTitle className="font-headline">Savings Goals Progress</CardTitle>
         </div>
         <CardDescription>
-          {chartData.length > 0 
+          {hasRealGoals 
             ? "Your progress towards your savings goals."
-            : "No savings goals found. Add one to see your progress."
+            : "No savings goals found. Here's a demo of what it looks like."
           }
         </CardDescription>
       </CardHeader>
