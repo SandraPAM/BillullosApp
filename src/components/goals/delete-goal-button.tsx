@@ -23,16 +23,16 @@ interface DeleteGoalButtonProps {
   goalId: string;
   userId: string;
   onGoalDeleted: () => void;
-  onDeleting: () => void;
+  onDeletingChange: (isDeleting: boolean) => void;
 }
 
-export function DeleteGoalButton({ goalId, userId, onGoalDeleted, onDeleting }: DeleteGoalButtonProps) {
+export function DeleteGoalButton({ goalId, userId, onGoalDeleted, onDeletingChange }: DeleteGoalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleDelete = async () => {
     setIsLoading(true);
-    onDeleting();
+    onDeletingChange(true);
     try {
       await deleteSavingsGoal(goalId, userId);
       toast({
@@ -47,7 +47,7 @@ export function DeleteGoalButton({ goalId, userId, onGoalDeleted, onDeleting }: 
         title: 'Error',
         description: 'Could not delete the savings goal. Please try again.',
       });
-       // If deletion fails, we should allow the user to try again.
+      onDeletingChange(false);
       setIsLoading(false);
     }
   };

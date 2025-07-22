@@ -22,16 +22,16 @@ import { Loader2, Trash2 } from 'lucide-react';
 interface DeleteBudgetButtonProps {
   budgetId: string;
   onBudgetDeleted: () => void;
-  onDeleting: () => void;
+  onDeletingChange: (isDeleting: boolean) => void;
 }
 
-export function DeleteBudgetButton({ budgetId, onBudgetDeleted, onDeleting }: DeleteBudgetButtonProps) {
+export function DeleteBudgetButton({ budgetId, onBudgetDeleted, onDeletingChange }: DeleteBudgetButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleDelete = async () => {
     setIsLoading(true);
-    onDeleting(); // Notify parent component that deletion process has started
+    onDeletingChange(true);
     try {
       await deleteBudget(budgetId);
       toast({
@@ -46,10 +46,8 @@ export function DeleteBudgetButton({ budgetId, onBudgetDeleted, onDeleting }: De
         title: 'Error',
         description: 'Could not delete the budget. Please try again.',
       });
-       // In case of error, we might need to reset the parent's deleting state.
-       // For now, the router push on success is the primary goal.
-    } finally {
-      // Don't set isLoading to false, as the component will unmount
+      onDeletingChange(false);
+      setIsLoading(false);
     }
   };
 

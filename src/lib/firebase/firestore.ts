@@ -1,3 +1,4 @@
+
 import { collection, addDoc, serverTimestamp, Timestamp, query, where, onSnapshot, doc, getDoc, updateDoc, increment, deleteDoc, writeBatch, getDocs } from "firebase/firestore"; 
 import { db } from "./config";
 import type { Budget, Expense, SavingsGoal, SavingsRecord } from "@/types";
@@ -159,9 +160,22 @@ export async function deleteBudget(budgetId: string) {
   }
 
   const budgetRef = doc(db, "budgets", budgetId);
-  const expensesQuery = query(collection(db, "expenses"), where("budgetId", "==", budgetId));
 
   try {
+    // First, get the budget document to retrieve the userId
+    const budgetDoc = await getDoc(budgetRef);
+    if (!budgetDoc.exists()) {
+      throw new Error("Budget to delete not found.");
+    }
+    const userId = budgetDoc.data().userId;
+
+    // Now, query for expenses with both budgetId and userId
+    const expensesQuery = query(
+      collection(db, "expenses"),
+      where("budgetId", "==", budgetId),
+      where("userId", "==", userId)
+    );
+    
     const batch = writeBatch(db);
     const expensesSnapshot = await getDocs(expensesQuery);
     
@@ -511,3 +525,5 @@ export function onSavingsRecordsUpdate(goalId: string, userId: string, callback:
 
     return unsubscribe;
 }
+
+    

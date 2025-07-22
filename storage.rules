@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check ownership from the file path
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Expense Receipts: Allow users to manage files only in their own folder
+    match /expense-receipts/{userId}/{expenseId}/{allPaths=**} {
+      allow read, write, delete: if isOwner(userId);
+    }
+
+    // Savings Screenshots: Allow users to manage files only in their own folder
+    match /savings-screenshots/{userId}/{recordId}/{allPaths=**} {
+      allow read, write, delete: if isOwner(userId);
+    }
+  }
+}

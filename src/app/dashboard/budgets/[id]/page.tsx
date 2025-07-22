@@ -28,7 +28,7 @@ export default function BudgetDetailPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (user && budgetId) {
+    if (user && budgetId && !deleting) {
       setLoading(true);
       const budgetUnsubscribe = onBudgetUpdate(budgetId, (updatedBudget) => {
         if (updatedBudget && updatedBudget.userId !== user.uid) {
@@ -50,14 +50,14 @@ export default function BudgetDetailPage() {
         expensesUnsubscribe();
       };
     }
-  }, [user, budgetId]);
+  }, [user, budgetId, deleting]);
 
   const handleBudgetDeleted = () => {
     router.push('/dashboard/budgets');
   }
 
-  const handleDeleting = () => {
-    setDeleting(true);
+  const handleDeleting = (isDeleting: boolean) => {
+    setDeleting(isDeleting);
   }
   
   if (deleting) {
@@ -98,7 +98,11 @@ export default function BudgetDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <AddExpenseForm budgetId={budget.id} userId={user!.uid} />
-              <DeleteBudgetButton budgetId={budget.id} onBudgetDeleted={handleBudgetDeleted} onDeleting={handleDeleting} />
+              <DeleteBudgetButton 
+                budgetId={budget.id} 
+                onBudgetDeleted={handleBudgetDeleted} 
+                onDeletingChange={handleDeleting} 
+              />
             </div>
         </div>
       </div>

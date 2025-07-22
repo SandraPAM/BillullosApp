@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    match /budgets/{budgetId} {
+      // Allow user to get their own budget document.
+      allow get: if isOwner(get(/databases/$(database)/documents/budgets/$(budgetId)).data.userId);
+      
+      // Allow user to list (query) only their own budgets.
+      allow list: if isOwner(request.query.userId);
+
+      // Allow user to create, update, delete their own budgets.
+      allow create, update, delete: if request.auth != null && isOwner(request.resource.data.userId);
+    }
+
+    match /expenses/{expenseId} {
+      // Allow user to read/write their own expenses.
+      allow read, write: if isOwner(get(/databases/$(database)/documents/budgets/$(resource.data.budgetId)).data.userId);
+
+      // Allow user to create expenses for a budget they own.
+      allow create: if isOwner(get(/databases/$(database)/documents/budgets/$(request.resource.data.budgetId)).data.userId);
+    }
+
+    match /savingsGoals/{goalId} {
+       // Allow user to get their own savings goal document.
+      allow get: if isOwner(get(/databases/$(database)/documents/savingsGoals/$(goalId)).data.userId);
+
+      // Allow user to list (query) only their own savings goals.
+      allow list: if isOwner(request.query.userId);
+
+       // Allow user to create, update, delete their own goals.
+      allow create, update, delete: if request.auth != null && isOwner(request.resource.data.userId);
+    }
+
+    match /savingsRecords/{recordId} {
+      // Allow user to read/write their own savings records.
+      allow read, write: if isOwner(get(/databases/$(database)/documents/savingsGoals/$(resource.data.goalId)).data.userId);
+
+       // Allow user to create records for a goal they own.
+      allow create: if isOwner(get(/databases/$(database)/documents/savingsGoals/$(request.resource.data.goalId)).data.userId);
+    }
+  }
+}
