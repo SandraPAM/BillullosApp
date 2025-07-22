@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -32,6 +33,14 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+const mockChartData = [
+  { name: 'Groceries', budget: 400, spent: 250 },
+  { name: 'Transport', budget: 150, spent: 175 },
+  { name: 'Eating Out', budget: 200, spent: 150 },
+  { name: 'Shopping', budget: 300, spent: 100 },
+];
+
+
 export function BudgetSummary() {
   const { user } = useAuth();
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -50,11 +59,15 @@ export function BudgetSummary() {
     }
   }, [user]);
 
-  const chartData = budgets.map(budget => ({
-    name: budget.name.slice(0, 10) + (budget.name.length > 10 ? '...' : ''), // Truncate name for chart
-    budget: budget.amount,
-    spent: budget.spentAmount,
-  })).slice(0, 6); // Display up to 6 budgets
+  const hasRealBudgets = budgets.length > 0;
+  
+  const chartData = hasRealBudgets 
+    ? budgets.map(budget => ({
+        name: budget.name.slice(0, 10) + (budget.name.length > 10 ? '...' : ''), // Truncate name for chart
+        budget: budget.amount,
+        spent: budget.spentAmount,
+      })).slice(0, 6) // Display up to 6 budgets
+    : mockChartData;
 
   if (loading) {
     return (
@@ -81,9 +94,9 @@ export function BudgetSummary() {
           <CardTitle className="font-headline">Budget Overview</CardTitle>
         </div>
         <CardDescription>
-          {chartData.length > 0
+          {hasRealBudgets
             ? "A summary of your current budgets."
-            : "No budgets found. Add one to see your overview."
+            : "No budgets found. Here's a demo of what it looks like."
           }
         </CardDescription>
       </CardHeader>
