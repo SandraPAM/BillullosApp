@@ -1,36 +1,30 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check ownership
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-
-    // Budgets: Users can CUD their own budgets, and Read them.
+    
+    // Budgets
     match /budgets/{budgetId} {
-      allow read, create, update, delete: if isOwner(resource.data.userId);
+      allow read, delete, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
     
-    // Expenses: Users can manage expenses for budgets they own.
+    // Expenses
     match /expenses/{expenseId} {
-      allow create: if isOwner(request.resource.data.userId);
-      allow read, update, delete: if isOwner(resource.data.userId);
-      
-      // This is the key rule: Allow listing expenses if the query is for a budget owned by the user.
-      allow list: if request.auth != null && get(/databases/$(database)/documents/budgets/$(request.query.get("where")[0][2])).data.userId == request.auth.uid;
+      allow read, delete, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
 
-    // Savings Goals: Users can CUD their own goals, and Read them.
+    // Savings Goals
     match /savingsGoals/{goalId} {
-      allow read, create, update, delete: if isOwner(resource.data.userId);
+      allow read, delete, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
 
-    // Savings Records: Users can manage records for goals they own.
+    // Savings Records (This was the missing piece)
     match /savingsRecords/{recordId} {
-      allow create: if isOwner(request.resource.data.userId);
-      allow read, update, delete: if isOwner(resource.data.userId);
+      allow read, delete, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
+    
   }
 }
