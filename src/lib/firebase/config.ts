@@ -1,4 +1,6 @@
+
 import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, AppCheck } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -24,8 +26,22 @@ if (!getApps().length) {
   app = getApp();
 }
 
+let appCheck: AppCheck | null = null;
+if (app && typeof window !== 'undefined') {
+  // This code only runs on the client
+  if (process.env.NODE_ENV !== 'production') {
+    (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  }
+  
+  appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider("6LeSnbMrAAAAAOFKLOKo923Tu0ngzGsXiwwBlZ4B"),
+    isTokenAutoRefreshEnabled: true
+  });
+}
+
+
 const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
 const storage = app ? getStorage(app) : null;
 
-export { app, auth, db, storage };
+export { app, appCheck, auth, db, storage };
