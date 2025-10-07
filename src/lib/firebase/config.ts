@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider, AppCheck } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, AppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -34,7 +34,7 @@ if (app && typeof window !== 'undefined') {
   }
   
   appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider("6LeSnbMrAAAAAOFKLOKo923Tu0ngzGsXiwwBlZ4B"),
+    provider: new ReCaptchaV3Provider("6LfyzOArAAAAAHpJtBW4ANaLw9VaU8HFSw59AjnK"),// recaprtcha v3 - recaptcha admin site
     isTokenAutoRefreshEnabled: true
   });
 }
