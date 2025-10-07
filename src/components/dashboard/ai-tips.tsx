@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,31 +12,66 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase/config';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import type { Expense, SavingsRecord } from '@/types';
+import { format } from 'date-fns';
+
 
 export function AiTips() {
   const [isLoading, setIsLoading] = useState(false);
   const [tips, setTips] = useState<BudgetingTipsOutput | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleGenerateTips = async () => {
+    if (!user || !db) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in to generate tips.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setTips(null);
     try {
-      // In a real app, you would fetch real user data from Firestore.
-      const mockInput = {
-        expenseRecords: [
-          "Groceries: $350/month",
-          "Dining out: $250/month",
-          "Gas: $150/month",
-          "Subscription service: $45/month",
-        ],
-        savingRecords: [
-          "Emergency fund: saved $100 last month",
-          "Vacation fund: saved $200 last month",
-        ],
-      };
-      const result = await getBudgetingTips(mockInput);
+      // Fetch expenses and savings records from Firestore
+      const expensesQuery = query(collection(db, "expenses"), where("userId", "==", user.uid));
+      const savingsQuery = query(collection(db, "savingsRecords"), where("userId", "==", user.uid));
+
+      const [expensesSnapshot, savingsSnapshot] = await Promise.all([
+        getDocs(expensesQuery),
+        getDocs(savingsQuery)
+      ]);
+
+      const expenseRecords = expensesSnapshot.docs.map(doc => {
+        const data = doc.data() as Expense;
+        return `${data.description}: $${data.amount.toFixed(2)} on ${format(data.date.toDate(), 'MMM d, yyyy')}`;
+      });
+
+      const savingRecords = savingsSnapshot.docs.map(doc => {
+        const data = doc.data() as SavingsRecord;
+        return `${data.description}: $${data.amount.toFixed(2)} saved on ${format(data.date.toDate(), 'MMM d, yyyy')}`;
+      });
+
+      if (expenseRecords.length === 0 && savingRecords.length === 0) {
+        toast({
+          title: "No Data Found",
+          description: "We couldn't find any financial data to analyze. Please add some budgets or savings goals first.",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      const result = await getBudgetingTips({
+        expenseRecords,
+        savingRecords
+      });
+
       setTips(result);
     } catch (error) {
       console.error("Failed to generate tips:", error);
