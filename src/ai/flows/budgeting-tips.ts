@@ -11,6 +11,9 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+
+enableFirebaseTelemetry();
 
 const BudgetingTipsInputSchema = z.object({
   expenseRecords: z.array(z.string()).describe('List of expense records.'),
