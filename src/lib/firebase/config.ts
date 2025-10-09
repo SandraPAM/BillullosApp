@@ -1,6 +1,6 @@
 
 import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider, AppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, AppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -28,15 +28,20 @@ if (!getApps().length) {
 
 let appCheck: AppCheck | null = null;
 if (app && typeof window !== 'undefined') {
+  const siteKey = process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY;
   // This code only runs on the client
   if (process.env.NODE_ENV !== 'production') {
-    (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN;
   }
   
-  appCheck = initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider("6LfyzOArAAAAAHpJtBW4ANaLw9VaU8HFSw59AjnK"),// recaprtcha v3 - recaptcha admin site
-    isTokenAutoRefreshEnabled: true
-  });
+  if (siteKey) {
+    appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(siteKey),
+      isTokenAutoRefreshEnabled: true
+    });
+  } else {
+    console.warn("Firebase App Check site key is not defined. App Check will not be initialized.");
+  }
 }
 
 
