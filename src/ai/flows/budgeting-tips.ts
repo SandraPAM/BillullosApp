@@ -46,7 +46,8 @@ Saving Records:
 - {{{this}}}
 {{/each}}
 
-Provide specific and actionable advice to help the user save more money and achieve their financial goals faster.`, // Modified prompt to use Handlebars each helper
+Provide specific and actionable advice to help the user achieve their financial goals faster while saving money when possibl and keeping buget stable.
+Provide specific and actionable advice to help user reach their savings goals`, // Modified prompt to use Handlebars each helper
 });
 
 const budgetingTipsFlow = ai.defineFlow(
