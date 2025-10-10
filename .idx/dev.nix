@@ -25,6 +25,8 @@
     workspace = {
       onCreate = {
         default.openFiles = [
+          ".env"
+          "lib/firebase/config.ts"
           "src/app/page.tsx"
         ];
         installDependencies = "npm install";
