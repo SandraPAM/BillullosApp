@@ -27,6 +27,7 @@
         default.openFiles = [
           "src/app/page.tsx"
         ];
+        installDependencies = "npm install";
       };
     };
     # Enable previews and customize configuration

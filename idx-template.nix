@@ -20,11 +20,5 @@
 
     # Add required .env.local file
     touch .env.local
-
-    mkdir "$out"
-    # We can now use "npm"
-    npm init --yes my-boot-strap@latest "$out"
-
-
   '';
 }
