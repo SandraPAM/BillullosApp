@@ -1,5 +1,9 @@
 # No user-configurable parameters
 { pkgs, ... }: {
+    packages = [
+      pkgs.nodejs_20
+      pkgs.zulu
+    ];
   # Shell script that produces the final environment
   bootstrap = ''
     # Copy the folder containing the `idx-template` files to the final
@@ -13,5 +17,13 @@
     # Remove the template files themselves and any connection to the template's
     # Git repository
     rm -rf "$out/.git" "$out/idx-template".{nix,json}
+
+    # Add required .env.local file
+    touch .env.local
+
+    # npm install
+    npm init --yes
+
+
   '';
 }
