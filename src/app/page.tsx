@@ -109,6 +109,25 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="py-16 md:py-24 flex justify-center">
+          <Button variant="ghost" asChild>
+                    <a href="https://studio.firebase.google.com/new?template=https%3A%2F%2Fgithub.com%2FSandraPAM%2FBillullosApp%2Ftree%2Fcustom_template">
+                      <picture>
+                        <source
+                          media="(prefers-color-scheme: dark)"
+                          srcSet="https://cdn.firebasestudio.dev/btn/try_dark_32.svg" />
+                        <source
+                          media="(prefers-color-scheme: light)"
+                          srcSet="https://cdn.firebasestudio.dev/btn/try_light_32.svg" />
+                        <img
+                          height="32"
+                          alt="Try in Firebase Studio"
+                          src="https://cdn.firebasestudio.dev/btn/try_blue_32.svg" />
+                      </picture>
+                    </a>
+          </Button>
+        </section>
+
       </main>
 
       <footer className="bg-card">
