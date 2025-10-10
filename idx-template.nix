@@ -20,5 +20,10 @@
 
     # Add required .env.local file
     touch "$out/.env.local"
+    cat > "$out/.env" << EOF
+    This is the first line of text.
+    This is the second line.
+    You can add as many lines as needed here.
+    EOF
   '';
 }

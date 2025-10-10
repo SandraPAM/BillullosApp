@@ -28,11 +28,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 You can find this information in the Firebase console:
 
-1. Go to your project\\'s settings.
+1. Go to your project\'s settings: https://console.firebase.google.com/project/?/settings/general.
 2. In the "General" tab, scroll down to the "Your apps" section.
-3. Select the web app you\\'re working with.
+3. Select the web app you\'re working with.
 4. In the "Firebase SDK snippet" section, select "Config".
-5. Copy the values for \`apiKey\`, \`authDomain\`, \`projectId\`, \`storageBucket\`, \`messagingSenderId\`, and \`appId\` and paste them into the \`.env.local\` file.`;
+5. Copy the values for:
+  * \`apiKey\`
+  * \`authDomain\`
+  * \`projectId\`
+  * \`storageBucket\`
+  * \`messagingSenderId\`
+  * \`appId\` 
+6. Paste the corresponding values into the \`.env\` file.`;
       console.error(errorMessage);
       setError(errorMessage);
       setLoading(false);
