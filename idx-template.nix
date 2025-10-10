@@ -1,9 +1,9 @@
 # No user-configurable parameters
 { pkgs, ... }: {
-    packages = [
-      pkgs.nodejs_20
-      pkgs.zulu
-    ];
+  packages = [
+    pkgs.nodejs_20
+    pkgs.zulu
+  ];
   # Shell script that produces the final environment
   bootstrap = ''
     # Copy the folder containing the `idx-template` files to the final
@@ -22,7 +22,7 @@
     touch .env.local
 
     # npm install
-    npm init --yes
+    npm init --yes "$out"
 
 
   '';
