@@ -19,6 +19,8 @@
     rm -rf "$out/.git" "$out/idx-template".{nix,json}
 
     # Add required .env.local file
-    touch .env.local
+    echo "Your desired text here" > filename.txt
+
+    echo "Your desired text here" > .env
   '';
 }
