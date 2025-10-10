@@ -22,12 +22,12 @@
     cat > "$out/.env" << EOF
     # Fill in your Firebase project details.
     # You can find these in your Firebase project settings.
-    NEXT_PUBLIC_FIREBASE_API_KEY="your-api-key"
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project-id.firebaseapp.com"
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project-id.appspot.com"
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your-messaging-sender-id"
-    NEXT_PUBLIC_FIREBASE_APP_ID="your-app-id"
+    #NEXT_PUBLIC_FIREBASE_API_KEY="your-api-key"
+    #NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project-id.firebaseapp.com"
+    #NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
+    #NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project-id.appspot.com"
+    #NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your-messaging-sender-id"
+    #NEXT_PUBLIC_FIREBASE_APP_ID="your-app-id"
     EOF
   '';
 }
