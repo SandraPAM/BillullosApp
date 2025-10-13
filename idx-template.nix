@@ -28,6 +28,7 @@
     #NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project-id.appspot.com"
     #NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your-messaging-sender-id"
     #NEXT_PUBLIC_FIREBASE_APP_ID="your-app-id"
+    #GEMINI_API_KEY="GEMINIAPIKEY"
     EOF
   '';
 }
