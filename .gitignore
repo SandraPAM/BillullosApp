@@ -47,3 +47,4 @@ firestore-debug.log
 #VSCode
 ./vscode/
 .vscode
+node_modules
