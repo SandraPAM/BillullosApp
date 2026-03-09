@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { signInWithPopup, GoogleAuthProvider, type AuthError } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, GoogleAuthProvider, type AuthError } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 
 const GoogleIcon = () => (
@@ -21,42 +21,69 @@ export function GoogleSignInButton(props: ButtonProps) {
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (!auth) return;
+
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          toast({
+            title: "Sign-in Successful",
+            description: "Redirecting to your dashboard...",
+          });
+          router.push('/dashboard');
+        }
+      } catch (error) {
+        console.error("Google Redirect Error:", error);
+        const authError = error as AuthError;
+        
+        let description = 'Could not complete sign-in with Google.';
+        
+        switch (authError.code) {
+          case 'auth/unauthorized-domain':
+            description = 'This domain is not authorized for Google Sign-In. Please check your Firebase console settings.';
+            break;
+          case 'auth/operation-not-allowed':
+            description = 'Google Sign-In is not enabled. Please enable it in your Firebase console under Authentication.';
+            break;
+        }
+        
+        toast({
+          variant: 'destructive',
+          title: 'Sign-in Failed',
+          description: description,
+        });
+      }
+    };
+
+    handleRedirectResult();
+  }, [router, toast]);
+
   const handleSignIn = async () => {
+    if (!auth) {
+      toast({
+        variant: 'destructive',
+        title: 'Auth Error',
+        description: 'Firebase Auth is not initialized. Please check your configuration.',
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-        toast({
-            title: "Sign-in Successful",
-            description: "Redirecting to your dashboard...",
-        });
-        router.push('/dashboard');
+        // Redirect takes the user away from the current page
+        await signInWithRedirect(auth, provider);
     } catch (error) {
         const authError = error as AuthError;
-        let description = 'Could not sign in with Google. Please try again.';
-        
-        switch (authError.code) {
-            case 'auth/popup-blocked':
-                description = 'Sign-in pop-up was blocked by the browser. Please allow pop-ups for this site and try again.';
-                break;
-            case 'auth/popup-closed-by-user':
-                description = 'Sign-in cancelled. The sign-in window was closed.';
-                break;
-            case 'auth/operation-not-allowed':
-                description = 'Google Sign-In is not enabled. Please enable it in your Firebase console under Authentication > Sign-in method.';
-                break;
-            case 'auth/unauthorized-domain':
-                description = 'This domain is not authorized for Google Sign-In. Please check your Firebase console settings and ensure the authDomain in src/lib/firebase/config.ts is correct.';
-                break;
-        }
+        console.error("Google Sign-In Initiation Error:", authError);
         
         toast({
             variant: 'destructive',
             title: 'Sign-in Failed',
-            description: description,
+            description: 'Could not start Google Sign-In. Please try again.',
         });
-        console.error("Google Sign-In Error:", authError);
-    } finally {
         setIsLoading(false);
     }
   };
