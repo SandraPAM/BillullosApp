@@ -40,12 +40,16 @@ export function GoogleSignInButton(props: ButtonProps) {
         
         let description = 'Could not complete sign-in with Google.';
         
+        // Help diagnose Workstation-specific issues
         switch (authError.code) {
           case 'auth/unauthorized-domain':
-            description = 'This domain is not authorized for Google Sign-In. Please check your Firebase console settings.';
+            description = 'This domain is not authorized. Double check the Authorized Domains list in your Firebase console.';
+            break;
+          case 'auth/internal-error':
+            description = 'Internal error during redirect. This can happen if third-party cookies are blocked.';
             break;
           case 'auth/operation-not-allowed':
-            description = 'Google Sign-In is not enabled. Please enable it in your Firebase console under Authentication.';
+            description = 'Google Sign-In is not enabled. Enable it in your Firebase Console.';
             break;
         }
         
