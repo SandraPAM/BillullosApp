@@ -1,12 +1,11 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { signInWithRedirect, getRedirectResult, GoogleAuthProvider, type AuthError } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 
 const GoogleIcon = () => (
@@ -21,49 +20,6 @@ export function GoogleSignInButton(props: ButtonProps) {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!auth) return;
-
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          toast({
-            title: "Sign-in Successful",
-            description: "Redirecting to your dashboard...",
-          });
-          router.push('/dashboard');
-        }
-      } catch (error) {
-        console.error("Google Redirect Error:", error);
-        const authError = error as AuthError;
-        
-        let description = 'Could not complete sign-in with Google.';
-        
-        // Help diagnose Workstation-specific issues
-        switch (authError.code) {
-          case 'auth/unauthorized-domain':
-            description = 'This domain is not authorized. Double check the Authorized Domains list in your Firebase console.';
-            break;
-          case 'auth/internal-error':
-            description = 'Internal error during redirect. This can happen if third-party cookies are blocked.';
-            break;
-          case 'auth/operation-not-allowed':
-            description = 'Google Sign-In is not enabled. Enable it in your Firebase Console.';
-            break;
-        }
-        
-        toast({
-          variant: 'destructive',
-          title: 'Sign-in Failed',
-          description: description,
-        });
-      }
-    };
-
-    handleRedirectResult();
-  }, [router, toast]);
-
   const handleSignIn = async () => {
     if (!auth) {
       toast({
@@ -77,17 +33,22 @@ export function GoogleSignInButton(props: ButtonProps) {
     setIsLoading(true);
     try {
         const provider = new GoogleAuthProvider();
-        // Redirect takes the user away from the current page
-        await signInWithRedirect(auth, provider);
-    } catch (error) {
-        const authError = error as AuthError;
-        console.error("Google Sign-In Initiation Error:", authError);
-        
+        // With the COOP header set to same-origin-allow-popups, 
+        // signInWithPopup should now successfully communicate back to the opener.
+        await signInWithPopup(auth, provider);
+        toast({
+            title: "Sign-in Successful",
+            description: "Redirecting to your dashboard...",
+        });
+        router.push('/dashboard');
+    } catch (error: any) {
+        console.error("Google Sign-In Error:", error);
         toast({
             variant: 'destructive',
             title: 'Sign-in Failed',
-            description: 'Could not start Google Sign-In. Please try again.',
+            description: error.message || 'Could not complete sign-in with Google.',
         });
+    } finally {
         setIsLoading(false);
     }
   };
