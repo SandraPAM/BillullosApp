@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -6,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { signInWithPopup, GoogleAuthProvider, type AuthError } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 
 const GoogleIcon = () => (
@@ -22,40 +21,33 @@ export function GoogleSignInButton(props: ButtonProps) {
   const { toast } = useToast();
 
   const handleSignIn = async () => {
+    if (!auth) {
+      toast({
+        variant: 'destructive',
+        title: 'Auth Error',
+        description: 'Firebase Auth is not initialized. Please check your configuration.',
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
         const provider = new GoogleAuthProvider();
+        // With the COOP header set to same-origin-allow-popups, 
+        // signInWithPopup should now successfully communicate back to the opener.
         await signInWithPopup(auth, provider);
         toast({
             title: "Sign-in Successful",
             description: "Redirecting to your dashboard...",
         });
         router.push('/dashboard');
-    } catch (error) {
-        const authError = error as AuthError;
-        let description = 'Could not sign in with Google. Please try again.';
-        
-        switch (authError.code) {
-            case 'auth/popup-blocked':
-                description = 'Sign-in pop-up was blocked by the browser. Please allow pop-ups for this site and try again.';
-                break;
-            case 'auth/popup-closed-by-user':
-                description = 'Sign-in cancelled. The sign-in window was closed.';
-                break;
-            case 'auth/operation-not-allowed':
-                description = 'Google Sign-In is not enabled. Please enable it in your Firebase console under Authentication > Sign-in method.';
-                break;
-            case 'auth/unauthorized-domain':
-                description = 'This domain is not authorized for Google Sign-In. Please check your Firebase console settings and ensure the authDomain in src/lib/firebase/config.ts is correct.';
-                break;
-        }
-        
+    } catch (error: any) {
+        console.error("Google Sign-In Error:", error);
         toast({
             variant: 'destructive',
             title: 'Sign-in Failed',
-            description: description,
+            description: error.message || 'Could not complete sign-in with Google.',
         });
-        console.error("Google Sign-In Error:", authError);
     } finally {
         setIsLoading(false);
     }

@@ -11,6 +11,9 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { enableFirebaseTelemetry } from '@genkit-ai/firebase';
+
+enableFirebaseTelemetry();
 
 const BudgetingTipsInputSchema = z.object({
   expenseRecords: z.array(z.string()).describe('List of expense records.'),
@@ -43,7 +46,8 @@ Saving Records:
 - {{{this}}}
 {{/each}}
 
-Provide specific and actionable advice to help the user save more money and achieve their financial goals faster.`, // Modified prompt to use Handlebars each helper
+Provide specific and actionable advice to help the user achieve their financial goals faster while saving money when possibl and keeping buget stable.
+Provide specific and actionable advice to help user reach their savings goals`, // Modified prompt to use Handlebars each helper
 });
 
 const budgetingTipsFlow = ai.defineFlow(

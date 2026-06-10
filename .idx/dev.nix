@@ -25,8 +25,11 @@
     workspace = {
       onCreate = {
         default.openFiles = [
-          "src/app/page.tsx"
+          "lib/firebase/config.ts"
+          ".env"
+          "README.md"
         ];
+        installDependencies = "npm install";
       };
     };
     # Enable previews and customize configuration

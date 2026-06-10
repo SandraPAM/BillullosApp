@@ -3,6 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  /* 
+    This is where we define the CSS variables for our color theme.
+    These variables are used by Tailwind CSS and our custom components
+    to ensure a consistent look and feel across the application.
+    The values are HSL (Hue, Saturation, Lightness) without the hsl() function.
+  */
+  /*color codes (#228B22, #F5F5DC and #E2725B) */
   :root {
     --background: 60 56% 91%;
     --foreground: 20 14% 4%;
